@@ -89,7 +89,8 @@ const userSchema = new mongoose.Schema({
 
   marketorName: { type: String, default: ''},
   businessName: { type: String, default: ''},
-  profileBusiness: { type: Number, default: 0}
+  profileBusiness: { type: Number, default: 0},
+  normalizedPhone: { type: String, unique: true, sparse: true },
 }, {
   timestamps: true // Active createdAt et updatedAt automatiquement
 });
