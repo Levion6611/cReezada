@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const userSchema = new mongoose.Schema({
   userID: { type: String, required: true, unique: true },
   type: { type: String, enum: ['company', 'business', 'help', 'era'], required: true, default: 'company' },
-  phone: { type: String, required: false, unique: true, sparse: true },
+  phone: { type: String, required: false, sparse: true },
   anonymous: { type: String, required: true, trim: true, default: '' },
   name: { type: String, required: true, trim: true, default: '' },
   gender: { type: String, enum: ['Male', 'Female', 'Organisation', 'Enterprise'], required: true },
