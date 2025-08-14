@@ -47,6 +47,7 @@ exports.register = async (req, res) => {
         anonymous: newUser.anonymous,
         name: newUser.name,
         gender: newUser.gender,
+        phone: newUser.phone,
         location: newUser.location,
         layoos: newUser.layoos,
         dailyStats: newUser.dailyStats,
