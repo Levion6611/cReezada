@@ -8,6 +8,8 @@ const User = require('../models/User');
 /// (fournis par le client) ont déjà un compte sur la plateforme
 router.post('/check-contacts', async (req, res) => {
   try {
+    console.log('/check-contacts body:', req.body);
+    
     const { phones } = req.body;
 
     if (!Array.isArray(phones)) {
