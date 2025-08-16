@@ -20,6 +20,7 @@ const postRoutes = require('./routes/post');
 const userRoutes = require('./routes/user');
 const chatRoutes = require('./routes/chat');
 const companiesRoutes = require('./routes/companies');
+const conversationRoutes = require('./routes/conversation');
 
 const app = express();
 const server = http.createServer(app);  // Création serveur HTTP natif pour socket.io
@@ -167,6 +168,7 @@ function validateToken(token, userID) {
     app.use('/api/post', postRoutes);
     app.use('/api/companies', companiesRoutes);
     app.use('/api/chat', chatRoutes(io));
+    app.use('/api/conversations', conversationRoutes);
 
     // Lancer l'écoute du serveur
     server.listen(PORT, () => logger.info(`✅ Serveur en écoute sur le port ${PORT}`));
