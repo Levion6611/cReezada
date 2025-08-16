@@ -8,9 +8,9 @@ const cloudinary = require('../services/cloudinary');
 
 // Le contrôleur a besoin de l'instance 'io' de Socket.IO
 // Pour cela, nous allons passer `io` au contrôleur.
-module.exports = (io) => {
+module.exports = (io, connectedUsers) => {
   const sendMessage = async (req, res) => {
-    const { conversationID, senderID, content, type } = req.body;
+    const { id, conversationID, senderID, content, type } = req.body;
 
     // Validation simple des données
     if (!conversationID || !senderID || !content) {
@@ -27,7 +27,7 @@ module.exports = (io) => {
       if (existingMessage) {
         await session.commitTransaction();
         session.endSession();
-        return res.status(200).json({ message: 'Message already processed' });
+        return res.status(200).json({ message: 'Message already processed', id });
       }
 
       // 1. Sauvegarde en base de données
@@ -42,7 +42,7 @@ module.exports = (io) => {
       await newMessage.save({ session });
 
       // 2. Mise à jour de la dernière info de la conversation
-      await Conversation.findByIdAndUpdate(
+      const convo = await Conversation.findByIdAndUpdate(
         conversationID,
         {
           lastMessage: content,
@@ -56,18 +56,27 @@ module.exports = (io) => {
       session.endSession();
 
       // 3. Émission du message via Socket.IO
-      io.to(conversationID).emit('new_message', {
-        id: newMessage._id,
-        conversationID,
-        senderID,
-        content,
-        type,
-        createdAt: newMessage.createdAt,
-        seenBy: newMessage.seenBy,
-      });
+      // Récupérer la liste des participants depuis convo (exclu sender)
+      const recipients = (convo && convo.participants) ? convo.participants.filter(p => p !== senderID) : [];
+      for (const uid of recipients) {
+        const sockets = connectedUsers.get(uid);
+        if (sockets) {
+          for (const sid of sockets) {
+            io.to(sid).emit('new_message', {
+              id: newMessage._id.toString(),
+              conversationID,
+              senderID,
+              content,
+              type,
+              createdAt: newMessage.createdAt,
+              seenBy: newMessage.seenBy,
+            });
+          }
+        }
+      }
 
       // 4. Réponse au client
-      res.status(200).json({ message: '✅ Message sent successfully', messageId: newMessage._id });
+      res.status(200).json({ success: true, message: '✅ Message sent successfully', messageId: newMessage._id.toString() });
 
     } catch (error) {
       // En cas d'erreur, on annule la transaction
