@@ -65,6 +65,7 @@ io.on('connection', (socket) => {
   console.log('🔌 Utilisateur connecté, socket id:', socket.id);
 
   const userID = socket.handshake.query.userID;
+  socket.data.userID = userID; 
 
   // Socket rejoint une "room" avec son userID pour ciblage direct
   socket.join(userID);
@@ -177,4 +178,3 @@ function validateToken(token, userID) {
     process.exit(1);
   }
 })();
-
