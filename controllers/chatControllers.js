@@ -8,7 +8,7 @@ const cloudinary = require('../services/cloudinary');
 
 // Le contrôleur a besoin de l'instance 'io' de Socket.IO
 // Pour cela, nous allons passer `io` au contrôleur.
-module.exports = (io, connectedUsers) => {
+module.exports = (io) => {
   const sendMessage = async (req, res) => {
     const { id, conversationID, senderID, content, type } = req.body;
 
@@ -27,7 +27,7 @@ module.exports = (io, connectedUsers) => {
       if (existingMessage) {
         await session.commitTransaction();
         session.endSession();
-        return res.status(200).json({ message: 'Message already processed', id });
+        return res.status(200).json({ message: 'Message already processed' });
       }
 
       // 1. Sauvegarde en base de données
@@ -42,7 +42,7 @@ module.exports = (io, connectedUsers) => {
       await newMessage.save({ session });
 
       // 2. Mise à jour de la dernière info de la conversation
-      const convo = await Conversation.findByIdAndUpdate(
+      await Conversation.findByIdAndUpdate(
         conversationID,
         {
           lastMessage: content,
@@ -56,24 +56,15 @@ module.exports = (io, connectedUsers) => {
       session.endSession();
 
       // 3. Émission du message via Socket.IO
-      // Récupérer la liste des participants depuis convo (exclu sender)
-      const recipients = (convo && convo.participants) ? convo.participants.filter(p => p !== senderID) : [];
-      for (const uid of recipients) {
-        const sockets = connectedUsers.get(uid);
-        if (sockets) {
-          for (const sid of sockets) {
-            io.to(sid).emit('new_message', {
-              id: newMessage._id.toString(),
-              conversationID,
-              senderID,
-              content,
-              type,
-              createdAt: newMessage.createdAt,
-              seenBy: newMessage.seenBy,
-            });
-          }
-        }
-      }
+      io.to(conversationID).emit('new_message', {
+        id: newMessage._id,
+        conversationID,
+        senderID,
+        content,
+        type,
+        createdAt: newMessage.createdAt,
+        seenBy: newMessage.seenBy,
+      });
 
       // 4. Réponse au client
       res.status(200).json({ success: true, message: '✅ Message sent successfully', messageId: newMessage._id.toString() });
