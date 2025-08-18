@@ -21,6 +21,7 @@ const userRoutes = require('./routes/user');
 const chatRoutes = require('./routes/chat');
 const companiesRoutes = require('./routes/companies');
 const conversationRoutes = require('./routes/conversation');
+const pingRoutes = require('./routes/ping');
 
 const app = express();
 const server = http.createServer(app);  // Création serveur HTTP natif pour socket.io
@@ -170,6 +171,7 @@ function validateToken(token, userID) {
     app.use('/api/companies', companiesRoutes);
     app.use('/api/chat', chatRoutes(io));
     app.use('/api/conversations', conversationRoutes);
+    app.use('/api/ping', pingRoutes);
 
     // Lancer l'écoute du serveur
     server.listen(PORT, () => logger.info(`✅ Serveur en écoute sur le port ${PORT}`));
